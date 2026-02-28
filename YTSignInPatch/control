@@ -1,0 +1,9 @@
+Package: com.custom.ytsigninpatch
+Name: YTSignInPatch
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Fix Google sign-in on sideloaded YouTube with YTLite
+Maintainer: DamagedSpore
+Author: DamagedSpore
+Section: Tweaks
+Depends: mobilesubstrate (>= 0.9.5000)
