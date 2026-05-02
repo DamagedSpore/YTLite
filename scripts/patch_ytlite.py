@@ -76,89 +76,109 @@ class ArMember:
 
 
 # =============================================================================
-# Patch definitions (verified via nm + otool + Oracle analysis)
-# Gate logic: 0 = locked, 1 = unlocked
+# Patch definitions — auto-detected by binary variant
+# Rootless (var/jb/): gate @ 0x12241a9, logic 0=locked 1=unlocked
+# Rootful (GitHub releases): gate @ 0x11564f1, inverted via BIC, 0=unlocked 1=locked
 # =============================================================================
 
-ALL_PATCHES: List[BinaryPatch] = [
-    # --- Minimal: gate function patches ---
-    BinaryPatch(
-        patch_id="A",
-        name="_dvnLocked",
-        offset=0x1EB10,
-        original=bytes.fromhex("289000D000A54639C0035FD6"),
-        patched=bytes.fromhex("20008052C0035FD61F2003D5"),
-        description="Always return 1 (unlocked). mov w0,#1; ret; nop",
-    ),
-    BinaryPatch(
-        patch_id="B",
-        name="_dvnCheck",
-        offset=0x1EB1C,
-        original=bytes.fromhex("F44FBEA9FD7B01A9FD430091"),
-        patched=bytes.fromhex("20008052C0035FD61F2003D5"),
-        description="Always return 1 (authorized). mov w0,#1; ret; nop",
-    ),
-    # --- Medium: auth function stubs ---
-    BinaryPatch(
-        patch_id="C",
-        name="_DVNPatreonLogout gate write",
-        offset=0x1F020,
-        original=bytes.fromhex("1FA50639"),
-        patched=bytes.fromhex("1F2003D5"),
-        description="NOP the strb that re-locks gate on logout.",
-    ),
-    BinaryPatch(
-        patch_id="D",
-        name="_DVNPatreonLogin",
-        offset=0x1F384,
-        original=bytes.fromhex("FF8302D1FC6F04A9FA6705A9"),
-        patched=bytes.fromhex("E0031FAAC0035FD61F2003D5"),
-        description="Stub login: mov x0,xzr; ret; nop. No OAuth flow.",
-    ),
-    BinaryPatch(
-        patch_id="E",
-        name="_DVNPatreonOpenDevices",
-        offset=0x219E4,
-        original=bytes.fromhex("FF8302D1FC6F04A9FA6705A9"),
-        patched=bytes.fromhex("E0031FAAC0035FD61F2003D5"),
-        description="Stub devices: mov x0,xzr; ret; nop. No WebView.",
-    ),
-    # --- Full: call-site NOPs ---
-    BinaryPatch(
-        patch_id="F1",
-        name="call-site bl _dvnCheck (hooks)",
-        offset=0x0CEA74,
-        original=bytes.fromhex("2A40FD97"),
-        patched=bytes.fromhex("20008052"),
-        description="Replace BL _dvnCheck with mov w0,#1.",
-    ),
-    BinaryPatch(
-        patch_id="F2",
-        name="call-site bl _dvnLocked (hooks)",
-        offset=0x0CEB18,
-        original=bytes.fromhex("FE3FFD97"),
-        patched=bytes.fromhex("20008052"),
-        description="Replace BL _dvnLocked with mov w0,#1.",
-    ),
-    BinaryPatch(
-        patch_id="F3",
-        name="call-site bl _dvnCheck (UI)",
-        offset=0x187D8C,
-        original=bytes.fromhex("645BFA97"),
-        patched=bytes.fromhex("20008052"),
-        description="Replace BL _dvnCheck with mov w0,#1.",
-    ),
-    BinaryPatch(
-        patch_id="F4",
-        name="call-site bl _dvnLocked (UI)",
-        offset=0x187F08,
-        original=bytes.fromhex("025BFA97"),
-        patched=bytes.fromhex("20008052"),
-        description="Replace BL _dvnLocked with mov w0,#1.",
-    ),
+PATCHES_ROOTLESS: List[BinaryPatch] = [
+    BinaryPatch("A", "_dvnLocked", 0x1EB10,
+        bytes.fromhex("289000D000A54639C0035FD6"),
+        bytes.fromhex("20008052C0035FD61F2003D5"),
+        "Always return 1 (unlocked). mov w0,#1; ret; nop"),
+    BinaryPatch("B", "_dvnCheck", 0x1EB1C,
+        bytes.fromhex("F44FBEA9FD7B01A9FD430091"),
+        bytes.fromhex("20008052C0035FD61F2003D5"),
+        "Always return 1 (authorized). mov w0,#1; ret; nop"),
+    BinaryPatch("C", "_DVNPatreonLogout gate write", 0x1F020,
+        bytes.fromhex("1FA50639"),
+        bytes.fromhex("1F2003D5"),
+        "NOP the strb that re-locks gate on logout."),
+    BinaryPatch("D", "_DVNPatreonLogin", 0x1F384,
+        bytes.fromhex("FF8302D1FC6F04A9FA6705A9"),
+        bytes.fromhex("E0031FAAC0035FD61F2003D5"),
+        "Stub login: mov x0,xzr; ret; nop. No OAuth flow."),
+    BinaryPatch("E", "_DVNPatreonOpenDevices", 0x219E4,
+        bytes.fromhex("FF8302D1FC6F04A9FA6705A9"),
+        bytes.fromhex("E0031FAAC0035FD61F2003D5"),
+        "Stub devices: mov x0,xzr; ret; nop. No WebView."),
+    BinaryPatch("F1", "call-site bl _dvnCheck (hooks)", 0x0CEA74,
+        bytes.fromhex("2A40FD97"), bytes.fromhex("20008052"),
+        "Replace BL _dvnCheck with mov w0,#1."),
+    BinaryPatch("F2", "call-site bl _dvnLocked (hooks)", 0x0CEB18,
+        bytes.fromhex("FE3FFD97"), bytes.fromhex("20008052"),
+        "Replace BL _dvnLocked with mov w0,#1."),
+    BinaryPatch("F3", "call-site bl _dvnCheck (UI)", 0x187D8C,
+        bytes.fromhex("645BFA97"), bytes.fromhex("20008052"),
+        "Replace BL _dvnCheck with mov w0,#1."),
+    BinaryPatch("F4", "call-site bl _dvnLocked (UI)", 0x187F08,
+        bytes.fromhex("025BFA97"), bytes.fromhex("20008052"),
+        "Replace BL _dvnLocked with mov w0,#1."),
 ]
 
-PATCHES_BY_ID: Dict[str, BinaryPatch] = {p.patch_id: p for p in ALL_PATCHES}
+PATCHES_ROOTFUL: List[BinaryPatch] = [
+    BinaryPatch("A", "_dvnLocked", 0x1EB4C,
+        bytes.fromhex("C889009008C55339290080522001280AC0035FD6"),
+        bytes.fromhex("20008052C0035FD61F2003D51F2003D51F2003D5"),
+        "Always return 1 (unlocked). mov w0,#1; ret; nop*3"),
+    BinaryPatch("B", "_dvnCheck", 0x1EB60,
+        bytes.fromhex("F44FBEA9FD7B01A9FD430091"),
+        bytes.fromhex("20008052C0035FD61F2003D5"),
+        "Always return 1 (authorized). mov w0,#1; ret; nop"),
+    BinaryPatch("C", "_DVNPatreonLogout gate write", 0x1F06C,
+        bytes.fromhex("09C51339"),
+        bytes.fromhex("1F2003D5"),
+        "NOP the strb that writes to inverted gate on logout."),
+    BinaryPatch("D", "_DVNPatreonLogin", 0x1F3D8,
+        bytes.fromhex("FF8302D1FC6F04A9FA6705A9"),
+        bytes.fromhex("E0031FAAC0035FD61F2003D5"),
+        "Stub login: mov x0,xzr; ret; nop. No OAuth flow."),
+    BinaryPatch("E", "_DVNPatreonOpenDevices", 0x21A34,
+        bytes.fromhex("FF8302D1FC6F04A9FA6705A9"),
+        bytes.fromhex("E0031FAAC0035FD61F2003D5"),
+        "Stub devices: mov x0,xzr; ret; nop. No WebView."),
+    BinaryPatch("F1", "call-site bl _dvnCheck (hooks)", 0x0CE9E0,
+        bytes.fromhex("6040FD97"), bytes.fromhex("20008052"),
+        "Replace BL _dvnCheck with mov w0,#1."),
+    BinaryPatch("F2", "call-site bl _dvnLocked (hooks)", 0x0CE974,
+        bytes.fromhex("7640FD97"), bytes.fromhex("20008052"),
+        "Replace BL _dvnLocked with mov w0,#1."),
+    BinaryPatch("F3", "call-site bl _dvnCheck (UI)", 0x187C50,
+        bytes.fromhex("C45BFA97"), bytes.fromhex("20008052"),
+        "Replace BL _dvnCheck with mov w0,#1."),
+    BinaryPatch("F4", "call-site bl _dvnLocked (UI)", 0x187F2C,
+        bytes.fromhex("085BFA97"), bytes.fromhex("20008052"),
+        "Replace BL _dvnLocked with mov w0,#1."),
+]
+
+VARIANT_SIGNATURES = {
+    "rootless": (0x1EB10, [bytes.fromhex("289000D0"), bytes.fromhex("20008052")]),
+    "rootful":  (0x1EB4C, [bytes.fromhex("C8890090"), bytes.fromhex("20008052")]),
+}
+
+
+def detect_variant(binary: bytes) -> str:
+    for name, (offset, sigs) in VARIANT_SIGNATURES.items():
+        if offset + len(sigs[0]) <= len(binary):
+            chunk = binary[offset:offset + len(sigs[0])]
+            if any(chunk == s for s in sigs):
+                return name
+    raise PatchError(
+        "Unknown binary variant. Expected rootless (_dvnLocked @ 0x1EB10) "
+        "or rootful (_dvnLocked @ 0x1EB4C). Binary may be a different version."
+    )
+
+
+def get_patches_for_variant(variant: str) -> List[BinaryPatch]:
+    if variant == "rootless":
+        return PATCHES_ROOTLESS
+    if variant == "rootful":
+        return PATCHES_ROOTFUL
+    raise PatchError(f"Unknown variant: {variant}")
+
+
+ALL_PATCHES: List[BinaryPatch] = []
+
 PATCH_LEVELS: Dict[str, List[str]] = {
     "minimal": ["A", "B"],
     "medium": ["A", "B", "C", "D", "E"],
@@ -208,8 +228,9 @@ def parse_args() -> argparse.Namespace:
 # Patch helpers
 # =============================================================================
 
-def get_patches_for_level(level: str) -> List[BinaryPatch]:
-    return [PATCHES_BY_ID[pid] for pid in PATCH_LEVELS[level]]
+def get_patches_for_level(level: str, variant_patches: List[BinaryPatch]) -> List[BinaryPatch]:
+    by_id = {p.patch_id: p for p in variant_patches}
+    return [by_id[pid] for pid in PATCH_LEVELS[level]]
 
 
 def slice_at(data: bytes, offset: int, length: int) -> bytes:
@@ -231,12 +252,12 @@ def get_patch_status(binary: bytes, patch: BinaryPatch) -> str:
     return "unknown"
 
 
-def collect_patch_statuses(binary: bytes) -> Dict[str, str]:
-    return {p.patch_id: get_patch_status(binary, p) for p in ALL_PATCHES}
+def collect_patch_statuses(binary: bytes, variant_patches: List[BinaryPatch]) -> Dict[str, str]:
+    return {p.patch_id: get_patch_status(binary, p) for p in variant_patches}
 
 
-def log_patch_statuses(statuses: Dict[str, str]) -> None:
-    for patch in ALL_PATCHES:
+def log_patch_statuses(statuses: Dict[str, str], variant_patches: List[BinaryPatch]) -> None:
+    for patch in variant_patches:
         LOGGER.info(
             "  [%s] %-35s @ 0x%06X -> %s",
             patch.patch_id, patch.name, patch.offset, statuses[patch.patch_id],
@@ -560,11 +581,14 @@ def run_verify(args: argparse.Namespace) -> int:
         raise PatchError(f"File not found: '{deb_path}'")
 
     _, _, _, _, _, dylib = inspect_deb(deb_path)
-    validate_macho(dylib, ALL_PATCHES)
+    variant = detect_variant(dylib)
+    LOGGER.info("Detected binary variant: %s", variant)
+    variant_patches = get_patches_for_variant(variant)
+    validate_macho(dylib, variant_patches)
 
-    statuses = collect_patch_statuses(dylib)
+    statuses = collect_patch_statuses(dylib, variant_patches)
     LOGGER.info("Patch status for all points:")
-    log_patch_statuses(statuses)
+    log_patch_statuses(statuses, variant_patches)
 
     state = infer_patch_state(statuses)
     LOGGER.info("Detected state: %s", state)
@@ -585,12 +609,15 @@ def run_patch(args: argparse.Namespace) -> int:
     output_path = Path(args.output) if args.output else deb_path.with_name(
         f"{deb_path.stem}.patched{deb_path.suffix}"
     )
-    patches = get_patches_for_level(level)
 
     members, idx, data_member, tar_payload, target_name, dylib = inspect_deb(deb_path)
+    variant = detect_variant(dylib)
+    LOGGER.info("Detected binary variant: %s", variant)
+    variant_patches = get_patches_for_variant(variant)
+    patches = get_patches_for_level(level, variant_patches)
     validate_macho(dylib, patches)
 
-    pre_state = infer_patch_state(collect_patch_statuses(dylib))
+    pre_state = infer_patch_state(collect_patch_statuses(dylib, variant_patches))
     LOGGER.info("Pre-patch state: %s", pre_state)
 
     patched_binary, change_count = apply_patches(dylib, patches, dry_run=args.dry_run)
@@ -599,7 +626,7 @@ def run_patch(args: argparse.Namespace) -> int:
         LOGGER.info("Dry-run complete: %d locations would change", change_count)
         return 0
 
-    post_statuses = collect_patch_statuses(patched_binary)
+    post_statuses = collect_patch_statuses(patched_binary, variant_patches)
     verify_requested_level(post_statuses, level)
     LOGGER.info("In-memory verification PASSED for level '%s'", level)
 
