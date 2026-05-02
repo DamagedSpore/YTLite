@@ -70,10 +70,18 @@ ALL_PATCHES: List[BinaryPatch] = [
         bytes.fromhex("0101"),
         bytes.fromhex("0000"),
         "Set both gate bytes to 0 (unlocked) in static data"),
-    BinaryPatch("H", "auth cache in __DATA", 0x1156559,
-        bytes.fromhex("87"),
-        bytes.fromhex("00"),
-        "Clear auth cache — 0x87=locked, anything else=unlocked"),
+    BinaryPatch("H", "auth state in __DATA", 0x1156558,
+        bytes.fromhex("0187"),
+        bytes.fromhex("0100"),
+        "Clear auth cache byte (0x87→0x00), keep flag byte"),
+    BinaryPatch("H2", "NOP auth cache write", 0x1EF1C,
+        bytes.fromhex("88661539"),
+        bytes.fromhex("1F2003D5"),
+        "NOP strb that overwrites cache back to 0x87"),
+    BinaryPatch("H3", "auth func 0x1eea8 stub", 0x1EEA8,
+        bytes.fromhex("FF0301D1F44F02A9FD7B03A9"),
+        bytes.fromhex("20008052C0035FD61F2003D5"),
+        "mov w0,#1; ret; nop — stub entire auth check function"),
     BinaryPatch("D", "_DVNPatreonLogin", 0x1F3D8,
         bytes.fromhex("FF8302D1FC6F04A9FA6705A9"),
         bytes.fromhex("E0031FAAC0035FD61F2003D5"),
@@ -95,8 +103,8 @@ ALL_PATCHES: List[BinaryPatch] = [
 PATCHES_BY_ID: Dict[str, BinaryPatch] = {p.patch_id: p for p in ALL_PATCHES}
 PATCH_LEVELS: Dict[str, List[str]] = {
     "minimal": ["A", "B"],
-    "medium": ["A", "B", "C", "C2", "G", "H", "D", "E"],
-    "full": ["A", "B", "C", "C2", "G", "H", "D", "E", "F1", "F2", "F3", "F4"],
+    "medium": ["A", "B", "C", "C2", "G", "H", "H2", "H3", "D", "E"],
+    "full": ["A", "B", "C", "C2", "G", "H", "H2", "H3", "D", "E", "F1", "F2", "F3", "F4"],
 }
 SIGNATURE_OFFSET = 0x1EB4C
 SIGNATURE_BYTES = [bytes.fromhex("C8890090"), bytes.fromhex("20008052")]
