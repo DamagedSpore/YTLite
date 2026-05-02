@@ -102,7 +102,7 @@ ALL_PATCHES: List[BinaryPatch] = [
 
 PATCHES_BY_ID: Dict[str, BinaryPatch] = {p.patch_id: p for p in ALL_PATCHES}
 PATCH_LEVELS: Dict[str, List[str]] = {
-    "full": ["A", "B", "C", "C2", "H", "H2", "D", "E", "F1", "F2", "F3", "F4"],
+    "medium": ["A", "B", "C", "C2", "H", "H2", "D", "E", "F1", "F2", "F3", "F4"],
 }
 SIGNATURE_OFFSET = 0x1EB4C
 SIGNATURE_BYTES = [bytes.fromhex("C8890090"), bytes.fromhex("20008052")]
@@ -377,7 +377,7 @@ def main() -> int:
     if args.verify and args.dry_run:
         p.error("--verify and --dry-run cannot be used together")
     if not args.verify and not args.level:
-        args.level = "full"
+        args.level = "medium"
 
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="[%(levelname)s] %(message)s")
     try:
