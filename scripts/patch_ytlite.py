@@ -102,9 +102,7 @@ ALL_PATCHES: List[BinaryPatch] = [
 
 PATCHES_BY_ID: Dict[str, BinaryPatch] = {p.patch_id: p for p in ALL_PATCHES}
 PATCH_LEVELS: Dict[str, List[str]] = {
-    "minimal": ["A", "B"],
-    "medium": ["A", "B", "C", "C2", "H", "H2", "H3", "D", "E"],
-    "full": ["A", "B", "C", "C2", "H", "H2", "H3", "D", "E", "F1", "F2", "F3", "F4"],
+    "full": ["A", "B", "C", "C2", "H", "H2", "D", "E", "F1", "F2", "F3", "F4"],
 }
 SIGNATURE_OFFSET = 0x1EB4C
 SIGNATURE_BYTES = [bytes.fromhex("C8890090"), bytes.fromhex("20008052")]
@@ -150,7 +148,7 @@ def log_statuses(statuses: Dict[str, str]) -> None:
 def infer_state(statuses: Dict[str, str]) -> str:
     if any(s == "unknown" for s in statuses.values()):
         return "mixed-or-unknown"
-    for level in ["full", "medium", "minimal"]:
+    for level in PATCH_LEVELS:
         ids = PATCH_LEVELS[level]
         others = [pid for pid in PATCHES_BY_ID if pid not in ids]
         if all(statuses[x] == "patched" for x in ids) and all(statuses[x] == "original" for x in others):
@@ -379,7 +377,7 @@ def main() -> int:
     if args.verify and args.dry_run:
         p.error("--verify and --dry-run cannot be used together")
     if not args.verify and not args.level:
-        args.level = "minimal"
+        args.level = "full"
 
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="[%(levelname)s] %(message)s")
     try:
