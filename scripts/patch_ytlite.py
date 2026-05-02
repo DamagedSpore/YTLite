@@ -66,14 +66,10 @@ ALL_PATCHES: List[BinaryPatch] = [
         bytes.fromhex("F85FBCA9F65701A9F44F02A9FD7B03A9FDC30091"),
         bytes.fromhex("C0035FD61F2003D51F2003D51F2003D51F2003D5"),
         "ret; nop*4 — kill startup verify+alert entirely"),
-    BinaryPatch("G1", "_ytpBool gate bypass", 0x1EE0C,
-        bytes.fromhex("C889009008C553390801005209010012"),
-        bytes.fromhex("080080521F2003D51F2003D509010012"),
-        "mov w8,#0; nop; nop; and w9,w8,#1 — force unlocked branch"),
-    BinaryPatch("G2", "_ytpInt gate bypass", 0x1EFC0,
-        bytes.fromhex("C889009008C553390801005209010012"),
-        bytes.fromhex("080080521F2003D51F2003D509010012"),
-        "mov w8,#0; nop; nop; and w9,w8,#1 — force unlocked branch"),
+    BinaryPatch("G", "gate bytes in __DATA", 0x11564F0,
+        bytes.fromhex("0101"),
+        bytes.fromhex("0000"),
+        "Set both gate bytes to 0 (unlocked) in static data"),
     BinaryPatch("D", "_DVNPatreonLogin", 0x1F3D8,
         bytes.fromhex("FF8302D1FC6F04A9FA6705A9"),
         bytes.fromhex("E0031FAAC0035FD61F2003D5"),
@@ -95,8 +91,8 @@ ALL_PATCHES: List[BinaryPatch] = [
 PATCHES_BY_ID: Dict[str, BinaryPatch] = {p.patch_id: p for p in ALL_PATCHES}
 PATCH_LEVELS: Dict[str, List[str]] = {
     "minimal": ["A", "B"],
-    "medium": ["A", "B", "C", "C2", "G1", "G2", "D", "E"],
-    "full": ["A", "B", "C", "C2", "G1", "G2", "D", "E", "F1", "F2", "F3", "F4"],
+    "medium": ["A", "B", "C", "C2", "G", "D", "E"],
+    "full": ["A", "B", "C", "C2", "G", "D", "E", "F1", "F2", "F3", "F4"],
 }
 SIGNATURE_OFFSET = 0x1EB4C
 SIGNATURE_BYTES = [bytes.fromhex("C8890090"), bytes.fromhex("20008052")]
