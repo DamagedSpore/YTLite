@@ -66,10 +66,10 @@ ALL_PATCHES: List[BinaryPatch] = [
         bytes.fromhex("08010052"),
         bytes.fromhex("08008052"),
         "mov w8,#0 — skip alert branch only, keep registration"),
-    BinaryPatch("G", "gate bytes in __DATA", 0x11564F0,
+    BinaryPatch("G", "keep gate bytes unlocked for ytpBool", 0x11564F0,
         bytes.fromhex("0101"),
-        bytes.fromhex("0000"),
-        "Set both gate bytes to 0 (unlocked) in static data"),
+        bytes.fromhex("0101"),
+        "KEEP 01 01 — ytpBool needs 01 for dispatch[0]=boolForKey"),
     BinaryPatch("H", "auth state in __DATA", 0x1156558,
         bytes.fromhex("0187"),
         bytes.fromhex("0100"),
@@ -103,8 +103,8 @@ ALL_PATCHES: List[BinaryPatch] = [
 PATCHES_BY_ID: Dict[str, BinaryPatch] = {p.patch_id: p for p in ALL_PATCHES}
 PATCH_LEVELS: Dict[str, List[str]] = {
     "minimal": ["A", "B"],
-    "medium": ["A", "B", "C", "C2", "G", "H", "H2", "H3", "D", "E"],
-    "full": ["A", "B", "C", "C2", "G", "H", "H2", "H3", "D", "E", "F1", "F2", "F3", "F4"],
+    "medium": ["A", "B", "C", "C2", "H", "H2", "H3", "D", "E"],
+    "full": ["A", "B", "C", "C2", "H", "H2", "H3", "D", "E", "F1", "F2", "F3", "F4"],
 }
 SIGNATURE_OFFSET = 0x1EB4C
 SIGNATURE_BYTES = [bytes.fromhex("C8890090"), bytes.fromhex("20008052")]
