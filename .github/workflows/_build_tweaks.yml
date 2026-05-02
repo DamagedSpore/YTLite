@@ -49,6 +49,9 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
       - name: Install Dependencies
         run: brew install make ldid dpkg
 
@@ -101,6 +104,18 @@ jobs:
             echo "::error::Validation failed: The file is not a valid DEB file. Detected type: $file_type."
             exit 1
           fi
+
+      - name: Patch YTLite package
+        if: ${{ hashFiles('ytplus.deb') != '' }}
+        run: |
+          python3 scripts/patch_ytlite.py \
+            ytplus.deb \
+            --level medium \
+            --output ytplus.deb
+          python3 scripts/patch_ytlite.py \
+            ytplus.deb \
+            --verify \
+            --level medium
 
       - name: Clone YouTubeHeader
         if: ${{ inputs.enable_youpip || inputs.enable_ytuhd || inputs.enable_yq || inputs.enable_ryd || inputs.enable_ytabc || inputs.enable_demc }}
